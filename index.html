@@ -13,9 +13,13 @@
                 font-family: Arial, Helvetica, sans-serif;
                 text-align: center;
             }
+            button{
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 15px
+            }
             .container {
                 display: grid;
-                grid-template-columns: repeat(2, 5fr);;
+                grid-template-columns: 100px 2fr 2fr;
                 padding: 10px;
                 column-gap: 10px;
                 row-gap: 10px;
@@ -26,6 +30,18 @@
                 padding: 10px;
                 font-size: 15px;
                 text-align: left;
+            }
+            .content {
+                display: none;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            .collapsable {
+                text-align: center;
+                font-family: Arial, Helvetica, sans-serif;
+                text-align: center;
+            }
+            .rowLable{
+                font-family: Arial, Helvetica, sans-serif;
             }
         </style>
         <script>
@@ -84,6 +100,22 @@
                 document.getElementById('claude-con').innerText = ""
                 document.getElementById('gemini-con').innerText = ""
             }
+            function stdButton(){
+                prompt = document.getElementById("stdPrompt")
+                if(prompt.style.display === "block"){
+                    prompt.style.display = "none"
+                } else {
+                    prompt.style.display = "block"
+                }
+            }  
+            function filtButton(){
+                prompt = document.getElementById("filtPrompt")
+                if(prompt.style.display === "block"){
+                    prompt.style.display = "none"
+                } else {
+                    prompt.style.display = "block"
+                }
+            }
         </script>
     </head>
     <body>
@@ -99,14 +131,18 @@
             Please note this is only the description of the MPI Standard. It will be in addition to the current manpage, which already contains descriptions of the parameters, function signature, and explination of error constants. Each coloumb is a prompt and each row is one model. 
         </p>
         <div class="container">
+            <div class="rowLable"></div>
             <div>
-                <h3>Standard</h3>
+                <button id="std" type="button" class="collapsible" onclick="stdButton()">Standard</button>
+                <p id= "stdPrompt" class="content">Prompt: Using "doc/mansrc/AI_Resources": a semantic description of the function focusing on advice to users, and omitting function signature and advice to implementers. </p>
             </div>
+
             <div>
-                <h3>Filtered</h3>
+                <button id="filt" type="button" class="collapsible" onclick="filtButton()">Filtered</button>
+                <p id= "filtPrompt" class="content">Prompt: Read through all of 'FUNCTION_Extracted.txt', convert it to a concise sematic description for FUNCTION written for an audiance of developer users. Omit the function signature and function arguments. Write a a broad behavioral summary sentance. On a new line concisely in paragraph form: a few sentances for a more detailed summary.</p>
             </div>
             
-
+            <div class="rowLable">GPT 5</div>
             <div>
                 <p id="gpt5-unex">
                     Blocking send that completes when the send buffer can be safely reused. Completion may occur before a matching receive is posted (eager protocols) or after the receive begins (rendezvous), and the exact behavior is implementation dependent. To avoid deadlock in tightly coupled exchange patterns, prefer using nonblocking operations (e.g., `MPI_Isend`/`MPI_Irecv`), `MPI_Sendrecv`, or adjust ordering. Messages are matched by communicator, source/destination, and tag; ordering between messages from the same sender to the same receiver on the same communicator is preserved when tags are equal. Counts and datatypes must be type-matched at the receiver. A send to `MPI_PROC_NULL` returns immediately and has no effect. For very large counts, use the large-count variant `MPI_Send_c`.
@@ -121,7 +157,7 @@
             </div>
 
 
-        
+            <div class="rowLable">GPT 5.5</div>
             <div>
                 <p id="gpt5.5-unex">
                     _MPI_Send_ performs a standard-mode blocking send. The message data is the specified number of datatype entries from the send buffer; a count of zero sends an empty data part. The message envelope uses the sending process, destination rank, tag, and communicator to determine where the message can be received. Tags must be within the valid range for the communicator, and destination ranks are interpreted in that communicator's destination group. Completion of _MPI_Send_ means the application may reuse the send buffer. It does not imply that the matching receive has completed, and a standard send may either complete before a matching receive is posted or block until the receive has begun. Programs should not rely on implementation buffering for correctness; use buffered, synchronous, ready, or nonblocking communication when those semantics are required.
@@ -135,7 +171,7 @@
                 </p>
             </div>
 
-            
+            <div class="rowLable">Claude Sonnet 4.6</div>
             <div>
                 <p id="claude-unex">
                     `MPI_Send` is a blocking standard-mode send. It does not return until the send buffer can be safely reused by the caller, meaning the data has either been copied into a system buffer or delivered directly to the receiver's buffer. Whether MPI buffers the outgoing message is entirely implementation-defined. If buffer space is available, the send may complete before the receiver has posted a matching receive.  If no buffer space is available, the call blocks until a matching receive is posted and the data has been moved.  Programs must not rely on system buffering to avoid deadlock: every correct standard-mode send program must remain correct when all sends are replaced with `MPI_Ssend`. If guaranteed buffering is required, use `MPI_Bsend` with a user-provided buffer attached via `MPI_Buffer_attach`. Because completion may depend on a matching receive being started by the destination, `MPI_Send` is _nonlocal_.  Patterns where both sides block in a send waiting for the other to receive can deadlock.  Nonblocking sends (`MPI_Isend`) avoid this by allowing the caller to continue, and also enable overlap of communication with computation. Sending a message to `MPI_PROC_NULL` is always valid and is a no-op. Sending a message to a process's own rank on an intra-communicator is permitted but is unsafe with the blocking send: if no matching receive is already posted, the call may block indefinitely.
@@ -149,8 +185,7 @@
                 </p>
             </div>
 
-
-            
+            <div class="rowLable">Gemini 3.5 Flash</div>
             <div>
                 <p id="gemini-unex">
                     This is the blocking send operation in standard mode. The send call does not return until the message data and envelope have been safely stored away so that the sender is free to modify the send buffer. In standard mode, it is up to MPI to decide whether outgoing messages will be buffered. MPI may buffer outgoing messages, and in such a case, the send call may complete before a matching receive is invoked. If buffer space is unavailable or MPI chooses not to buffer for performance reasons, the send call will not complete until a matching receive has been started, and the data has been moved to the receiver. A standard mode send can be started whether or not a matching receive has been started, and its successful completion may depend on the occurrence of a matching receive. Users should not rely on system buffering for correctness of standard mode sends, as any system can run out of buffer resources. Correct, portable programs must not depend on system buffering.
